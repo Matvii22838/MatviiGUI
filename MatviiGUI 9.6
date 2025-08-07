@@ -1,0 +1,402 @@
+local lp = game.Players.LocalPlayer
+local playerGui = lp:WaitForChild("PlayerGui")
+
+local gui = Instance.new("ScreenGui")
+gui.Name = "MatviiGUI"
+gui.Parent = playerGui
+gui.ResetOnSpawn = false
+
+local menuFrame = Instance.new("Frame", gui)
+menuFrame.Size = UDim2.new(0, 180, 0, 500)
+menuFrame.Position = UDim2.new(0, 10, 0, 10)
+menuFrame.BackgroundColor3 = Color3.fromRGB(30,30,30)
+menuFrame.BorderSizePixel = 0
+menuFrame.Active = true
+menuFrame.Draggable = false
+
+local title = Instance.new("TextLabel", menuFrame)
+title.Size = UDim2.new(1, 0, 0, 30)
+title.Position = UDim2.new(0, 0, 0, 0)
+title.Text = "MatviiGUI 9.6"
+title.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+title.TextColor3 = Color3.new(1,1,1)
+title.TextScaled = true
+title.Font = Enum.Font.FredokaOne
+
+local searchBox = Instance.new("TextBox", menuFrame)
+searchBox.Size = UDim2.new(1, -10, 0, 30)
+searchBox.Position = UDim2.new(0, 5, 0, 35)
+searchBox.BackgroundColor3 = Color3.new(1,1,1)
+searchBox.BackgroundTransparency = 0.7
+searchBox.TextColor3 = Color3.new(0,0,0)
+searchBox.TextScaled = true
+searchBox.Font = Enum.Font.FredokaOne
+searchBox.PlaceholderText = "Пошук..."
+searchBox.ClearTextOnFocus = false
+searchBox.Text = ""
+
+local scrollFrame = Instance.new("ScrollingFrame", menuFrame)
+scrollFrame.Size = UDim2.new(1, 0, 1, -110)
+scrollFrame.Position = UDim2.new(0, 0, 0, 75)
+scrollFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
+scrollFrame.ScrollBarThickness = 6
+scrollFrame.BackgroundTransparency = 1
+
+local layout = Instance.new("UIListLayout", scrollFrame)
+layout.Padding = UDim.new(0, 5)
+layout.SortOrder = Enum.SortOrder.LayoutOrder
+layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+	scrollFrame.CanvasSize = UDim2.new(0, 0, 0, layout.AbsoluteContentSize.Y + 10)
+end)
+
+local buttons = {}
+
+local function createButton(text, callback)
+	local btn = Instance.new("TextButton")
+	btn.Size = UDim2.new(1, -10, 0, 40)
+	btn.Position = UDim2.new(0, 5, 0, 0)
+	btn.BackgroundColor3 = Color3.fromRGB(255, 221, 51)
+	btn.TextColor3 = Color3.new(0.1, 0.1, 0.1)
+	btn.TextScaled = true
+	btn.Font = Enum.Font.FredokaOne
+	btn.Text = text
+	btn.BorderSizePixel = 0
+	btn.Parent = scrollFrame
+	btn.MouseEnter:Connect(function() btn.BackgroundTransparency = 0.2 end)
+	btn.MouseLeave:Connect(function() btn.BackgroundTransparency = 0 end)
+	btn.MouseButton1Click:Connect(callback)
+	return btn
+end
+
+-- Тут твої старі кнопки з усіма функціями:
+
+table.insert(buttons, createButton("Fly", function()
+	loadstring(game:HttpGet("https://raw.githubusercontent.com/XNEOFF/FlyGuiV3/main/FlyGuiV3.txt"))()
+end))
+
+table.insert(buttons, createButton("Tool", function()
+	local tool = Instance.new("Tool")
+	tool.Name = "Cube"
+	local part = Instance.new("Part")
+	part.Name = "Handle"; part.Size = Vector3.new(2,2,2)
+	part.BrickColor = BrickColor.new("Bright yellow")
+	part.Anchored = false; part.CanCollide = true
+	part.Parent = tool
+	tool.Parent = lp.Backpack
+end))
+
+table.insert(buttons, createButton("Boom", function()
+	local char = lp.Character
+	if char and char:FindFirstChild("HumanoidRootPart") then
+		local ex = Instance.new("Explosion")
+		ex.Position = char.HumanoidRootPart.Position
+		ex.BlastRadius = 10
+		ex.BlastPressure = 500000
+		ex.Parent = workspace
+	end
+end))
+
+table.insert(buttons, createButton("Sword", function()
+	local sword = Instance.new("Tool")
+	sword.Name = "Sword"
+	local handle = Instance.new("Part")
+	handle.Name = "Handle"; handle.Size = Vector3.new(1,4,1)
+	handle.BrickColor = BrickColor.new("Bright red")
+	handle.CanCollide = false; handle.Anchored = false
+	handle.Parent = sword
+	local hit
+	sword.Equipped:Connect(function()
+		hit = handle.Touched:Connect(function(hitPart)
+			local hum = hitPart.Parent:FindFirstChildOfClass("Humanoid")
+			if hum and hitPart.Parent ~= lp.Character then hum:TakeDamage(25) end
+		end)
+	end)
+	sword.Unequipped:Connect(function()
+		if hit then hit:Disconnect() end
+	end)
+	sword.Parent = lp.Backpack
+end))
+
+table.insert(buttons, createButton("Sit", function()
+	local char = lp.Character
+	if char and char:FindFirstChildOfClass("Humanoid") then
+		char:FindFirstChildOfClass("Humanoid").Sit = true
+	end
+end))
+
+table.insert(buttons, createButton("Inventory", function()
+	for _, item in pairs(lp.Backpack:GetChildren()) do
+		if item:IsA("Tool") then item:Destroy() end
+	end
+	local char = lp.Character
+	if char then
+		for _, item in pairs(char:GetChildren()) do
+			if item:IsA("Tool") then item:Destroy() end
+		end
+	end
+end))
+
+table.insert(buttons, createButton("Leave", function() lp:Kick("You are out of the game.") end))
+
+table.insert(buttons, createButton("Sound", function()
+	local sound = Instance.new("Sound", workspace)
+	sound.SoundId = "rbxassetid://145099824"
+	sound.Volume = 5; sound.Looped = false; sound:Play()
+end))
+
+table.insert(buttons, createButton("Какать", function()
+	local char = lp.Character
+	if not char then return end
+	if char:FindFirstChild("HumanoidRootPart") then
+		local ex = Instance.new("Explosion")
+		ex.Position = char.HumanoidRootPart.Position
+		ex.BlastRadius = 6
+		ex.BlastPressure = 500000
+		ex.Parent = workspace
+	end
+	local txt = Instance.new("TextLabel", gui)
+	txt.Size = UDim2.new(1,0,0,100)
+	txt.Position = UDim2.new(0,0,0.4,0)
+	txt.BackgroundTransparency = 1; txt.Text = "КАКАТЬ"
+	txt.TextColor3 = Color3.fromRGB(255,0,0)
+	txt.TextScaled = true; txt.Font = Enum.Font.FredokaOne
+	task.delay(2, function() txt:Destroy() end)
+	for _, part in pairs(char:GetDescendants()) do
+		if part:IsA("BasePart") and part.Name~="HumanoidRootPart" then
+			part.BrickColor = BrickColor.new("Reddish brown")
+		end
+	end
+end))
+
+table.insert(buttons, createButton("kaboom", function()
+	local bomb = Instance.new("Tool")
+	bomb.Name = "Bomb"
+	local handle = Instance.new("Part")
+	handle.Name = "Handle"; handle.Size = Vector3.new(1,1,1)
+	handle.BrickColor = BrickColor.new("Really red")
+	handle.Anchored = false; handle.CanCollide = false
+	handle.Parent = bomb
+	bomb.Parent = lp.Backpack
+end))
+
+table.insert(buttons, createButton("light", function()
+	local char = lp.Character
+	if not char then return end
+	local lt = char:FindFirstChild("Light")
+	if lt then lt:Destroy() else
+		local head = char:FindFirstChild("Head") or char.PrimaryPart
+		if head then
+			local newLt = Instance.new("PointLight")
+			newLt.Name="Light"; newLt.Range=15; newLt.Brightness=2
+			newLt.Parent = head
+		end
+	end
+end))
+
+table.insert(buttons, createButton("speed", function()
+	local char = lp.Character
+	if char and char:FindFirstChildOfClass("Humanoid") then
+		char:FindFirstChildOfClass("Humanoid").WalkSpeed = 37
+	end
+end))
+
+local noclipEnabled = false
+table.insert(buttons, createButton("noclip", function()
+	noclipEnabled = not noclipEnabled
+	local char = lp.Character
+	if not char then return end
+	for _, part in pairs(char:GetChildren()) do
+		if part:IsA("BasePart") then
+			part.CanCollide = not noclipEnabled
+		end
+	end
+end))
+
+table.insert(buttons, createButton("ghost", function()
+	local char = lp.Character
+	if not char then return end
+	for _, part in pairs(char:GetChildren()) do
+		if part:IsA("BasePart") then part.Transparency = 0.5 end
+	end
+end))
+
+table.insert(buttons, createButton("giant", function()
+	local char = lp.Character
+	if not char then return end
+	for _, part in pairs(char:GetChildren()) do
+		if part:IsA("BasePart") then part.Size = part.Size * 3 end
+	end
+end))
+
+local spinActive = false
+table.insert(buttons, createButton("spin", function()
+	spinActive = not spinActive
+	local char = lp.Character
+	if not char or not char.PrimaryPart then return end
+	spawn(function()
+		while spinActive and char and char.PrimaryPart do
+			char:SetPrimaryPartCFrame(char.PrimaryPart.CFrame * CFrame.Angles(0, math.rad(10), 0))
+			wait(0.05)
+		end
+	end)
+end))
+
+table.insert(buttons, createButton("jump", function()
+	local char = lp.Character
+	if char and char:FindFirstChildOfClass("Humanoid") then
+		char:FindFirstChildOfClass("Humanoid"):ChangeState(Enum.HumanoidStateType.Jumping)
+	end
+end))
+
+table.insert(buttons, createButton("heal", function()
+	local char = lp.Character
+	if not char then return end
+	local h = char:FindFirstChildOfClass("Humanoid")
+	if h then h.Health = h.MaxHealth end
+end))
+
+-- Додамо кнопку FOV з меню вводу
+table.insert(buttons, createButton("FOV", function()
+	if menuFrame:FindFirstChild("FOVFrame") then
+		menuFrame.FOVFrame:Destroy()
+		return
+	end
+	
+	local fovGui = Instance.new("Frame", menuFrame)
+	fovGui.Name = "FOVFrame"
+	fovGui.Size = UDim2.new(1, -20, 0, 70)
+	fovGui.Position = UDim2.new(0, 10, 1, -80)
+	fovGui.BackgroundColor3 = Color3.fromRGB(255, 221, 51)
+	fovGui.BorderSizePixel = 0
+	
+	local label = Instance.new("TextLabel", fovGui)
+	label.Size = UDim2.new(1, 0, 0, 20)
+	label.Position = UDim2.new(0, 0, 0, 5)
+	label.BackgroundTransparency = 1
+	label.Text = "Введи FOV (30-120):"
+	label.TextColor3 = Color3.new(0.1, 0.1, 0.1)
+	label.TextScaled = true
+	label.Font = Enum.Font.FredokaOne
+	
+	local input = Instance.new("TextBox", fovGui)
+	input.Size = UDim2.new(1, -10, 0, 30)
+	input.Position = UDim2.new(0, 5, 0, 30)
+	input.BackgroundColor3 = Color3.new(1,1,1)
+	input.BackgroundTransparency = 0.7
+	input.TextColor3 = Color3.new(0,0,0)
+	input.TextScaled = true
+	input.Font = Enum.Font.FredokaOne
+	input.ClearTextOnFocus = false
+	input.Text = tostring(workspace.CurrentCamera.FieldOfView)
+	
+	input.FocusLost:Connect(function(enterPressed)
+		if enterPressed then
+			local num = tonumber(input.Text)
+			if num and num >= 30 and num <= 120 then
+				workspace.CurrentCamera.FieldOfView = num
+			end
+		end
+	end)
+end))
+
+-- Кнопка Teleport з вікном
+table.insert(buttons, createButton("Teleport", function()
+	if menuFrame:FindFirstChild("TeleportFrame") then
+		menuFrame.TeleportFrame:Destroy()
+		return
+	end
+	
+	local teleportGui = Instance.new("Frame", menuFrame)
+	teleportGui.Name = "TeleportFrame"
+	teleportGui.Size = UDim2.new(1, -20, 0, 90)
+	teleportGui.Position = UDim2.new(0, 10, 1, -170)
+	teleportGui.BackgroundColor3 = Color3.fromRGB(255, 221, 51)
+	teleportGui.BorderSizePixel = 0
+	
+	local label = Instance.new("TextLabel", teleportGui)
+	label.Size = UDim2.new(1, 0, 0, 20)
+	label.Position = UDim2.new(0, 0, 0, 5)
+	label.BackgroundTransparency = 1
+	label.Text = "Введи ім'я гравця:"
+	label.TextColor3 = Color3.new(0.1, 0.1, 0.1)
+	label.TextScaled = true
+	label.Font = Enum.Font.FredokaOne
+	
+	local input = Instance.new("TextBox", teleportGui)
+	input.Size = UDim2.new(1, -10, 0, 30)
+	input.Position = UDim2.new(0, 5, 0, 30)
+	input.BackgroundColor3 = Color3.new(1,1,1)
+	input.BackgroundTransparency = 0.7
+	input.TextColor3 = Color3.new(0,0,0)
+	input.TextScaled = true
+	input.Font = Enum.Font.FredokaOne
+	input.ClearTextOnFocus = false
+	
+	local tpButton = Instance.new("TextButton", teleportGui)
+	tpButton.Size = UDim2.new(1, -20, 0, 30)
+	tpButton.Position = UDim2.new(0, 10, 0, 65)
+	tpButton.BackgroundColor3 = Color3.fromRGB(0, 100, 0)
+	tpButton.TextColor3 = Color3.new(1,1,1)
+	tpButton.TextScaled = true
+	tpButton.Font = Enum.Font.FredokaOne
+	tpButton.Text = "Телепортуватись"
+	tpButton.BorderSizePixel = 0
+	
+	tpButton.MouseButton1Click:Connect(function()
+		local targetName = input.Text
+		local target = game.Players:FindFirstChild(targetName)
+		local char = lp.Character
+		if target and target.Character and target.Character:FindFirstChild("HumanoidRootPart") and char and char:FindFirstChild("HumanoidRootPart") then
+			char.HumanoidRootPart.CFrame = target.Character.HumanoidRootPart.CFrame
+		end
+	end)
+end))
+
+-- Пошук кнопок
+searchBox:GetPropertyChangedSignal("Text"):Connect(function()
+	local text = searchBox.Text:lower()
+	if text == "" then
+		for _, btn in pairs(buttons) do
+			btn.Visible = true
+		end
+	else
+		for _, btn in pairs(buttons) do
+			if btn.Text:lower():find(text) then
+				btn.Visible = true
+			else
+				btn.Visible = false
+			end
+		end
+	end
+end)
+
+-- Hide і Show кнопки
+local hideBtn = Instance.new("TextButton", menuFrame)
+hideBtn.Size = UDim2.new(1, 0, 0, 30)
+hideBtn.Position = UDim2.new(0, 0, 1, -30)
+hideBtn.Text = "Hide"
+hideBtn.BackgroundColor3 = Color3.fromRGB(255, 221, 51)
+hideBtn.TextColor3 = Color3.new(0.1,0.1,0.1)
+hideBtn.TextScaled = true
+hideBtn.Font = Enum.Font.FredokaOne
+hideBtn.BorderSizePixel = 0
+
+local showBtn = Instance.new("TextButton", gui)
+showBtn.Size = UDim2.new(0, 120, 0, 40)
+showBtn.Position = UDim2.new(0, 10, 0, 10)
+showBtn.Text = "Show"
+showBtn.Visible = false
+showBtn.BackgroundColor3 = Color3.fromRGB(255, 221, 51)
+showBtn.TextColor3 = Color3.new(0.1,0.1,0.1)
+showBtn.TextScaled = true
+showBtn.Font = Enum.Font.FredokaOne
+showBtn.BorderSizePixel = 0
+
+hideBtn.MouseButton1Click:Connect(function()
+	menuFrame.Visible = false
+	showBtn.Visible = true
+end)
+showBtn.MouseButton1Click:Connect(function()
+	menuFrame.Visible = true
+	showBtn.Visible = false
+end)
