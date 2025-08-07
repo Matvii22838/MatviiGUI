@@ -1,0 +1,358 @@
+local lp = game.Players.LocalPlayer
+local gui = Instance.new("ScreenGui", lp:WaitForChild("PlayerGui"))
+gui.ResetOnSpawn = false
+
+local menuFrame = Instance.new("Frame", gui)
+menuFrame.Size = UDim2.new(0, 180, 0, 440)
+menuFrame.Position = UDim2.new(0, 10, 0, 10)
+menuFrame.BackgroundColor3 = Color3.fromRGB(30,30,30)
+menuFrame.BorderSizePixel = 0
+menuFrame.Active = true
+menuFrame.Draggable = false
+
+local title = Instance.new("TextLabel", menuFrame)
+title.Size = UDim2.new(1, 0, 0, 30)
+title.Position = UDim2.new(0, 0, 0, 0)
+title.Text = "MatviiGUI 9.7"
+title.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+title.TextColor3 = Color3.new(1,1,1)
+title.TextScaled = true
+title.Font = Enum.Font.FredokaOne
+
+local scrollFrame = Instance.new("ScrollingFrame", menuFrame)
+scrollFrame.Size = UDim2.new(1, 0, 1, -30)
+scrollFrame.Position = UDim2.new(0, 0, 0, 30)
+scrollFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
+scrollFrame.ScrollBarThickness = 6
+scrollFrame.BackgroundTransparency = 1
+
+local layout = Instance.new("UIListLayout", scrollFrame)
+layout.Padding = UDim.new(0, 5)
+layout.SortOrder = Enum.SortOrder.LayoutOrder
+layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+	scrollFrame.CanvasSize = UDim2.new(0, 0, 0, layout.AbsoluteContentSize.Y + 10)
+end)
+
+local function createButton(text, callback)
+	local btn = Instance.new("TextButton")
+	btn.Size = UDim2.new(1, -10, 0, 40)
+	btn.Position = UDim2.new(0, 5, 0, 0)
+	btn.BackgroundColor3 = Color3.fromRGB(255, 221, 51)
+	btn.TextColor3 = Color3.new(0.1, 0.1, 0.1)
+	btn.TextScaled = true
+	btn.Font = Enum.Font.FredokaOne
+	btn.Text = text
+	btn.BorderSizePixel = 0
+	btn.Parent = scrollFrame
+	btn.MouseEnter:Connect(function() btn.BackgroundTransparency = 0.2 end)
+	btn.MouseLeave:Connect(function() btn.BackgroundTransparency = 0 end)
+	btn.MouseButton1Click:Connect(callback)
+end
+
+local function createWindow(titleText)
+	local wnd = Instance.new("Frame", gui)
+	wnd.Size = UDim2.new(0, 200, 0, 120)
+	wnd.Position = UDim2.new(0, 200, 0, 10)
+	wnd.BackgroundColor3 = Color3.fromRGB(255, 221, 51)
+	wnd.BorderSizePixel = 0
+	wnd.Name = "SideWindow"
+
+	local title = Instance.new("TextLabel", wnd)
+	title.Size = UDim2.new(1, 0, 0, 25)
+	title.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+	title.TextColor3 = Color3.new(1, 1, 1)
+	title.Font = Enum.Font.FredokaOne
+	title.TextScaled = true
+	title.Text = titleText
+
+	local input = Instance.new("TextBox", wnd)
+	input.Size = UDim2.new(1, -20, 0, 40)
+	input.Position = UDim2.new(0, 10, 0, 35)
+	input.BackgroundColor3 = Color3.new(1,1,1)
+	input.BackgroundTransparency = 0.5
+	input.ClearTextOnFocus = false
+	input.TextColor3 = Color3.new(0, 0, 0)
+	input.Font = Enum.Font.FredokaOne
+	input.TextScaled = true
+	input.PlaceholderText = "Введіть значення"
+
+	local applyBtn = Instance.new("TextButton", wnd)
+	applyBtn.Size = UDim2.new(1, -20, 0, 30)
+	applyBtn.Position = UDim2.new(0, 10, 0, 85)
+	applyBtn.BackgroundColor3 = Color3.fromRGB(20,20,20)
+	applyBtn.TextColor3 = Color3.new(1,1,1)
+	applyBtn.Font = Enum.Font.FredokaOne
+	applyBtn.TextScaled = true
+	applyBtn.Text = "Застосувати"
+
+	return wnd, input, applyBtn
+end
+
+local windows = {}
+
+local function toggleWindow(name)
+	if windows[name] and windows[name].Parent then
+		windows[name]:Destroy()
+		windows[name] = nil
+	else
+		if name == "FOV" then
+			local wnd, input, applyBtn = createWindow("Зміна FOV")
+			windows[name] = wnd
+			applyBtn.MouseButton1Click:Connect(function()
+				local val = tonumber(input.Text)
+				if val and val >= 70 and val <= 120 then
+					workspace.CurrentCamera.FieldOfView = val
+				end
+			end)
+		elseif name == "Speed" then
+			local wnd, input, applyBtn = createWindow("Зміна швидкості")
+			windows[name] = wnd
+			applyBtn.MouseButton1Click:Connect(function()
+				local val = tonumber(input.Text)
+				if val and val >= 16 and val <= 200 then
+					local char = lp.Character
+					if char and char:FindFirstChildOfClass("Humanoid") then
+						char:FindFirstChildOfClass("Humanoid").WalkSpeed = val
+					end
+				end
+			end)
+		elseif name == "Teleport" then
+			local wnd, input, applyBtn = createWindow("Телепорт")
+			windows[name] = wnd
+			applyBtn.MouseButton1Click:Connect(function()
+				local targetName = input.Text
+				local target = game.Players:FindFirstChild(targetName)
+				local char = lp.Character
+				if target and target.Character and char and char:FindFirstChild("HumanoidRootPart") and target.Character:FindFirstChild("HumanoidRootPart") then
+					char.HumanoidRootPart.CFrame = target.Character.HumanoidRootPart.CFrame
+				end
+			end)
+		end
+	end
+end
+
+createButton("Fly", function()
+	loadstring(game:HttpGet("https://raw.githubusercontent.com/XNEOFF/FlyGuiV3/main/FlyGuiV3.txt"))()
+end)
+
+createButton("Tool", function()
+	local tool = Instance.new("Tool")
+	tool.Name = "Cube"
+	local part = Instance.new("Part")
+	part.Name = "Handle"; part.Size = Vector3.new(2,2,2)
+	part.BrickColor = BrickColor.new("Bright yellow")
+	part.Anchored = false; part.CanCollide = true
+	part.Parent = tool
+	tool.Parent = lp.Backpack
+end)
+
+createButton("Boom", function()
+	local char = lp.Character
+	if char and char:FindFirstChild("HumanoidRootPart") then
+		local ex = Instance.new("Explosion")
+		ex.Position = char.HumanoidRootPart.Position
+		ex.BlastRadius = 10
+		ex.BlastPressure = 500000
+		ex.Parent = workspace
+	end
+end)
+
+createButton("Sword", function()
+	local sword = Instance.new("Tool")
+	sword.Name = "Sword"
+	local handle = Instance.new("Part")
+	handle.Name = "Handle"; handle.Size = Vector3.new(1,4,1)
+	handle.BrickColor = BrickColor.new("Bright red")
+	handle.CanCollide = false; handle.Anchored = false
+	handle.Parent = sword
+	local hit
+	sword.Equipped:Connect(function()
+		hit = handle.Touched:Connect(function(hitPart)
+			local hum = hitPart.Parent:FindFirstChildOfClass("Humanoid")
+			if hum and hitPart.Parent ~= lp.Character then hum:TakeDamage(25) end
+		end)
+	end)
+	sword.Unequipped:Connect(function()
+		if hit then hit:Disconnect() end
+	end)
+	sword.Parent = lp.Backpack
+end)
+
+createButton("Sit", function()
+	local char = lp.Character
+	if char and char:FindFirstChildOfClass("Humanoid") then
+		char:FindFirstChildOfClass("Humanoid").Sit = true
+	end
+end)
+
+createButton("Inventory", function()
+	for _, item in pairs(lp.Backpack:GetChildren()) do
+		if item:IsA("Tool") then item:Destroy() end
+	end
+	local char = lp.Character
+	if char then
+		for _, item in pairs(char:GetChildren()) do
+			if item:IsA("Tool") then item:Destroy() end
+		end
+	end
+end)
+
+createButton("Leave", function() lp:Kick("You are out of the game.") end)
+
+createButton("Sound", function()
+	local sound = Instance.new("Sound", workspace)
+	sound.SoundId = "rbxassetid://145099824"
+	sound.Volume = 5; sound.Looped = false; sound:Play()
+end)
+
+createButton("Какать", function()
+	local char = lp.Character
+	if not char then return end
+	if char:FindFirstChild("HumanoidRootPart") then
+		local ex = Instance.new("Explosion")
+		ex.Position = char.HumanoidRootPart.Position
+		ex.BlastRadius = 6
+		ex.BlastPressure = 500000
+		ex.Parent = workspace
+	end
+	local txt = Instance.new("TextLabel", gui)
+	txt.Size = UDim2.new(1,0,0,100)
+	txt.Position = UDim2.new(0,0,0.4,0)
+	txt.BackgroundTransparency = 1; txt.Text = "КАКАТЬ"
+	txt.TextColor3 = Color3.fromRGB(255,0,0)
+	txt.TextScaled = true; txt.Font = Enum.Font.FredokaOne
+	task.delay(2, function() txt:Destroy() end)
+	for _, part in pairs(char:GetDescendants()) do
+		if part:IsA("BasePart") and part.Name~="HumanoidRootPart" then
+			part.BrickColor = BrickColor.new("Reddish brown")
+		end
+	end
+end)
+
+createButton("kaboom", function()
+	local bomb = Instance.new("Tool")
+	bomb.Name = "Bomb"
+	local handle = Instance.new("Part")
+	handle.Name = "Handle"; handle.Size = Vector3.new(1,1,1)
+	handle.BrickColor = BrickColor.new("Really red")
+	handle.Anchored = false; handle.CanCollide = false
+	handle.Parent = bomb
+	bomb.Parent = lp.Backpack
+end)
+
+createButton("light", function()
+	local char = lp.Character
+	if not char then return end
+	local lt = char:FindFirstChild("Light")
+	if lt then lt:Destroy() else
+		local head = char:FindFirstChild("Head") or char.PrimaryPart
+		if head then
+			local newLt = Instance.new("PointLight")
+			newLt.Name="Light"; newLt.Range=15; newLt.Brightness=2
+			newLt.Parent = head
+		end
+	end
+end)
+
+createButton("speed", function()
+	toggleWindow("Speed")
+end)
+
+local noclipEnabled = false
+createButton("noclip", function()
+	noclipEnabled = not noclipEnabled
+	local char = lp.Character
+	if not char then return end
+	for _, part in pairs(char:GetChildren()) do
+		if part:IsA("BasePart") then
+			part.CanCollide = not noclipEnabled
+		end
+	end
+end)
+
+createButton("ghost", function()
+	local char = lp.Character
+	if not char then return end
+	for _, part in pairs(char:GetChildren()) do
+		if part:IsA("BasePart") then part.Transparency = 0.5 end
+	end
+end)
+
+createButton("giant", function()
+	local char = lp.Character
+	if not char then return end
+	for _, part in pairs(char:GetChildren()) do
+		if part:IsA("BasePart") then part.Size = part.Size * 3 end
+	end
+end)
+
+local spinActive = false
+createButton("spin", function()
+	spinActive = not spinActive
+	local char = lp.Character
+	if not char or not char.PrimaryPart then return end
+	spawn(function()
+		while spinActive and char and char.PrimaryPart do
+			char:SetPrimaryPartCFrame(char.PrimaryPart.CFrame * CFrame.Angles(0, math.rad(10), 0))
+			wait(0.05)
+		end
+	end)
+end)
+
+createButton("jump", function()
+	local char = lp.Character
+	if char and char:FindFirstChildOfClass("Humanoid") then
+		char:FindFirstChildOfClass("Humanoid"):ChangeState(Enum.HumanoidStateType.Jumping)
+	end
+end)
+
+createButton("heal", function()
+	local char = lp.Character
+	if not char then return end
+	local h = char:FindFirstChildOfClass("Humanoid")
+	if h then h.Health = h.MaxHealth end
+end)
+
+createButton("FOV", function()
+	toggleWindow("FOV")
+end)
+
+createButton("Teleport", function()
+	toggleWindow("Teleport")
+end)
+
+local hideBtn = Instance.new("TextButton", menuFrame)
+hideBtn.Size = UDim2.new(1, 0, 0, 30)
+hideBtn.Position = UDim2.new(0, 0, 1, -30)
+hideBtn.Text = "Hide"
+hideBtn.BackgroundColor3 = Color3.fromRGB(255, 221, 51)
+hideBtn.TextColor3 = Color3.new(0.1,0.1,0.1)
+hideBtn.TextScaled = true
+hideBtn.Font = Enum.Font.FredokaOne
+hideBtn.BorderSizePixel = 0
+
+local showBtn = Instance.new("TextButton", gui)
+showBtn.Size = UDim2.new(0, 120, 0, 40)
+showBtn.Position = UDim2.new(0, 10, 0, 10)
+showBtn.Text = "Show"
+showBtn.Visible = false
+showBtn.BackgroundColor3 = Color3.fromRGB(255, 221, 51)
+showBtn.TextColor3 = Color3.new(0.1,0.1,0.1)
+showBtn.TextScaled = true
+showBtn.Font = Enum.Font.FredokaOne
+showBtn.BorderSizePixel = 0
+
+hideBtn.MouseButton1Click:Connect(function()
+	menuFrame.Visible = false
+	for _, win in pairs(windows) do
+		if win and win.Parent then win.Visible = false end
+	end
+	showBtn.Visible = true
+end)
+showBtn.MouseButton1Click:Connect(function()
+	menuFrame.Visible = true
+	for _, win in pairs(windows) do
+		if win and win.Parent then win.Visible = true end
+	end
+	showBtn.Visible = false
+end)
