@@ -1,0 +1,192 @@
+local lp = game.Players.LocalPlayer
+local gui = Instance.new("ScreenGui", lp:WaitForChild("PlayerGui"))
+gui.ResetOnSpawn = false
+
+local menuFrame = Instance.new("Frame", gui)
+menuFrame.Size = UDim2.new(0, 180, 0, 440)
+menuFrame.Position = UDim2.new(0, 10, 0, 10)
+menuFrame.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+menuFrame.BorderSizePixel = 0
+menuFrame.Active = true
+menuFrame.Draggable = true
+
+local title = Instance.new("TextLabel", menuFrame)
+title.Size = UDim2.new(1, 0, 0, 30)
+title.Position = UDim2.new(0, 0, 0, 0)
+title.Text = "ShooterGUI"
+title.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+title.TextColor3 = Color3.new(1,1,1)
+title.TextScaled = true
+title.Font = Enum.Font.SourceSans
+title.BorderSizePixel = 0
+
+local scrollFrame = Instance.new("ScrollingFrame", menuFrame)
+scrollFrame.Size = UDim2.new(1, 0, 1, -60)
+scrollFrame.Position = UDim2.new(0, 0, 0, 30)
+scrollFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
+scrollFrame.ScrollBarThickness = 6
+scrollFrame.BackgroundTransparency = 0
+
+local layout = Instance.new("UIListLayout", scrollFrame)
+layout.Padding = UDim.new(0, 5)
+layout.SortOrder = Enum.SortOrder.LayoutOrder
+layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+	scrollFrame.CanvasSize = UDim2.new(0, 0, 0, layout.AbsoluteContentSize.Y + 10)
+end)
+
+local function createButton(text, callback)
+	local btn = Instance.new("TextButton")
+	btn.Size = UDim2.new(1, -10, 0, 40)
+	btn.Position = UDim2.new(0, 5, 0, 0)
+	btn.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+	btn.TextColor3 = Color3.new(1, 1, 1)
+	btn.TextScaled = true
+	btn.Font = Enum.Font.SourceSans
+	btn.Text = text
+	btn.BorderSizePixel = 0
+	btn.Parent = scrollFrame
+	btn.MouseEnter:Connect(function() btn.BackgroundColor3 = Color3.fromRGB(30,30,30) end)
+	btn.MouseLeave:Connect(function() btn.BackgroundColor3 = Color3.fromRGB(0,0,0) end)
+	btn.MouseButton1Click:Connect(callback)
+end
+
+local speedWindow = nil
+local function toggleSpeedWindow()
+	if speedWindow then
+		speedWindow:Destroy()
+		speedWindow = nil
+		return
+	end
+	speedWindow = Instance.new("Frame", gui)
+	speedWindow.Size = UDim2.new(0, 180, 0, 100)
+	speedWindow.Position = UDim2.new(0, 260, 0, 10)  -- зміщення праворуч на 260
+	speedWindow.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+	speedWindow.BorderSizePixel = 0
+	speedWindow.Active = true
+	speedWindow.Draggable = true
+
+	local titleSpeed = Instance.new("TextLabel", speedWindow)
+	titleSpeed.Size = UDim2.new(1, 0, 0, 30)
+	titleSpeed.Position = UDim2.new(0, 0, 0, 0)
+	titleSpeed.Text = "Set Speed"
+	titleSpeed.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+	titleSpeed.TextColor3 = Color3.new(1,1,1)
+	titleSpeed.TextScaled = true
+	titleSpeed.Font = Enum.Font.SourceSans
+	titleSpeed.BorderSizePixel = 0
+
+	local speedBox = Instance.new("TextBox", speedWindow)
+	speedBox.Size = UDim2.new(1, -10, 0, 30)
+	speedBox.Position = UDim2.new(0, 5, 0, 40)
+	speedBox.PlaceholderText = "Enter speed (number)"
+	speedBox.Text = ""
+	speedBox.ClearTextOnFocus = false
+	speedBox.TextScaled = true
+	speedBox.Font = Enum.Font.SourceSans
+	speedBox.BackgroundColor3 = Color3.fromRGB(230,230,230)
+	speedBox.TextColor3 = Color3.new(0,0,0)
+	speedBox.BorderSizePixel = 0
+
+	local function setSpeed()
+		local val = tonumber(speedBox.Text)
+		if val and lp.Character and lp.Character:FindFirstChildOfClass("Humanoid") then
+			lp.Character:FindFirstChildOfClass("Humanoid").WalkSpeed = val
+		end
+	end
+
+	speedBox.FocusLost:Connect(function(enterPressed)
+		if enterPressed then setSpeed() end
+	end)
+end
+
+createButton("speed", function()
+	toggleSpeedWindow()
+end)
+
+createButton("jump", function()
+	if lp.Character and lp.Character:FindFirstChildOfClass("Humanoid") then
+		lp.Character:FindFirstChildOfClass("Humanoid"):ChangeState(Enum.HumanoidStateType.Jumping)
+	end
+end)
+
+createButton("noclip", function()
+	local char = lp.Character
+	if not char then return end
+	local noclipEnabled = char:GetAttribute("noclipEnabled")
+	if noclipEnabled then
+		for _, part in pairs(char:GetChildren()) do
+			if part:IsA("BasePart") then
+				part.CanCollide = true
+			end
+		end
+		char:SetAttribute("noclipEnabled", false)
+	else
+		for _, part in pairs(char:GetChildren()) do
+			if part:IsA("BasePart") then
+				part.CanCollide = false
+			end
+		end
+		char:SetAttribute("noclipEnabled", true)
+	end
+end)
+
+createButton("fly", function()
+	loadstring(game:HttpGet("https://raw.githubusercontent.com/XNEOFF/FlyGuiV3/main/FlyGuiV3.txt"))()
+end)
+
+createButton("aim", function()
+	if not lp.Character then return end
+	local mouse = lp:GetMouse()
+	local aiming = lp.Character:GetAttribute("aiming")
+	if aiming then
+		lp.Character:SetAttribute("aiming", false)
+		mouse.TargetFilter = nil
+	else
+		lp.Character:SetAttribute("aiming", true)
+		mouse.TargetFilter = lp.Character
+	end
+end)
+
+createButton("boom", function()
+	local char = lp.Character
+	if char and char:FindFirstChild("HumanoidRootPart") then
+		local ex = Instance.new("Explosion")
+		ex.Position = char.HumanoidRootPart.Position
+		ex.BlastRadius = 10
+		ex.BlastPressure = 500000
+		ex.Parent = workspace
+	end
+end)
+
+local hideBtn = Instance.new("TextButton", menuFrame)
+hideBtn.Size = UDim2.new(1, 0, 0, 30)
+hideBtn.Position = UDim2.new(0, 0, 1, -30)
+hideBtn.Text = "Hide"
+hideBtn.BackgroundColor3 = Color3.fromRGB(0,0,0)
+hideBtn.TextColor3 = Color3.new(1,1,1)
+hideBtn.TextScaled = true
+hideBtn.Font = Enum.Font.SourceSans
+hideBtn.BorderSizePixel = 0
+
+local showBtn = Instance.new("TextButton", gui)
+showBtn.Size = UDim2.new(0, 120, 0, 40)
+showBtn.Position = UDim2.new(0, 10, 0, 10)
+showBtn.Text = "Show"
+showBtn.Visible = false
+showBtn.BackgroundColor3 = Color3.fromRGB(0,0,0)
+showBtn.TextColor3 = Color3.new(1,1,1)
+showBtn.TextScaled = true
+showBtn.Font = Enum.Font.SourceSans
+showBtn.BorderSizePixel = 0
+
+hideBtn.MouseButton1Click:Connect(function()
+	menuFrame.Visible = false
+	if speedWindow then speedWindow.Visible = false end
+	showBtn.Visible = true
+end)
+
+showBtn.MouseButton1Click:Connect(function()
+	menuFrame.Visible = true
+	if speedWindow then speedWindow.Visible = true end
+	showBtn.Visible = false
+end)
